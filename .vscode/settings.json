@@ -1,0 +1,14 @@
+{
+    "python.linting.enabled": true,
+    "python.pythonPath": "/usr/bin/python3",
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./Unittests",
+        "-p",
+        "test_*.py"
+    ],
+    "python.testing.pytestEnabled": false,
+    "python.testing.nosetestsEnabled": false,
+    "python.testing.unittestEnabled": true
+}
