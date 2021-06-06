@@ -3,7 +3,7 @@ from tkinter import ttk as ttk
 
 class Callback_App:
     def __init__(self, master):
-        self.button1 = ttk.Button(master, text = "Click me", command = self.callback)
+        self.button1 = ttk.Button(master, text = "Click me", state = ['disabled'], command = self.callback)
         self.label = ttk.Label(master)
         self.button1.pack()
         self.label.pack()
