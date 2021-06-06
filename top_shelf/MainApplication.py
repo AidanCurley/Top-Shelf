@@ -31,6 +31,38 @@ class TopShelfApp(tk.Tk):
         current_frame = self.frames[frame]
         current_frame.tkraise()
 
+class Error(Exception):
+    """Base class for exceptions in this app"""
+    pass
+
+
+class InputError(Error):
+    """ Exception raised when there is an error in the input
+        Attributes:
+        expression -- input expression in which the error occurred
+        message -- explanation of the error
+    """
+
+    def __init__(self, expression, message):
+        self.expression = expression
+        self.message = message
+
+class Bottle(object):
+    def __init__(self, distillery, name, age, price):
+        for character in distillery:
+            if character.isdigit():
+                raise InputError("distillery", "The distillery name can only include alphabetic characters.")
+        self.distillery = distillery.title()
+        self.name = str(name).title()
+        try:
+            self.price = "{:.2f}".format(float(price))
+        except ValueError:
+            raise InputError("price", "The price must be a number in the following format: ##.##")
+
+        if age.isnumeric() or age == "N/A":
+            self.age = age
+        else:
+            raise InputError("age", "The age must be a whole number.")
 
 class HomePage(tk.Frame):
     def __init__(self, parent, controller):
@@ -48,10 +80,11 @@ class HomePage(tk.Frame):
         self.edit_btn.grid(row=5, column=3,columnspan=2, pady=(20,0), ipady=5)
         self.remove_btn = ttk.Button(self, text="Remove a Bottle", style='W.TButton')
         self.remove_btn.grid(row=5, column=5,columnspan=2, pady=(20,0), ipady=5)
+
 class AddBottlePage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self,parent)
-
+        controller.wm_title("Add a Bottle")
         self.distillery_lbl = tk.Label(self, text="Distillery: ")
         self.distillery_lbl.grid(row=1, column=1, columnspan=2, padx=20, pady=(20, 0), sticky=tk.W)
         self.distillery_txt = tk.Entry(self)
@@ -72,17 +105,34 @@ class AddBottlePage(tk.Frame):
         self.price_txt = tk.Entry(self)
         self.price_txt.grid(row=4, column=3, columnspan=3, pady=(10, 0), sticky=tk.W)
 
-        self.save_btn = ttk.Button(self, text="Save Details", style='W.TButton')
+        self.save_btn = ttk.Button(self, text="Save Details", command=self.save_entry)
         self.save_btn.grid(row=6, column=1,columnspan=3, padx=(20, 0), pady=(20,0), ipady=5, sticky=tk.NSEW)
 
-        self.cancel_btn = ttk.Button(self, text="Cancel", style='W.TButton')
+        self.cancel_btn = ttk.Button(self, text="Cancel", command=self.cancel_entry)
         self.cancel_btn.grid(row=6, column=4,columnspan=3, pady=(20,0), ipady=5, sticky=tk.NSEW)
+
+    def save_entry(self):
+        distillery = self.distillery_txt.get()
+        name = self.name_txt.get()
+        age = self.age_txt.get() if self.age_txt.get() != "" else "N/A"
+        price = self.price_txt.get()
+
+        new_bottle = Bottle(distillery, name, age, price)
+        print(vars(new_bottle))
+        return
+
+    def cancel_entry(self):
+        self.distillery_txt.delete(0, tk.END)
+        self.name_txt.delete(0, tk.END)
+        self.age_txt.delete(0, tk.END)
+        self.price_txt.delete(0, tk.END)
+        return
 
 class EditBottlePage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self,parent)
-        label = tk.Label(self, text="Edit Bottle")
-        label.pack(pady=10,padx=10)
+        controller.wm_title("Add a Bottle")
+
 
 app = TopShelfApp()
 app.mainloop()
