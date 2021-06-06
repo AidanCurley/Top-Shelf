@@ -1,6 +1,5 @@
 import tkinter as tk
 import tkinter.ttk as ttk
-from pprint import pprint
 
 class TopShelfApp(tk.Tk):
     def __init__(self, *args, **kwargs):
@@ -85,7 +84,7 @@ class HomePage(tk.Frame):
 class AddBottlePage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self,parent)
-
+        controller.wm_title("Add a Bottle")
         self.distillery_lbl = tk.Label(self, text="Distillery: ")
         self.distillery_lbl.grid(row=1, column=1, columnspan=2, padx=20, pady=(20, 0), sticky=tk.W)
         self.distillery_txt = tk.Entry(self)
@@ -123,13 +122,17 @@ class AddBottlePage(tk.Frame):
         return
 
     def cancel_entry(self):
+        self.distillery_txt.delete(0, tk.END)
+        self.name_txt.delete(0, tk.END)
+        self.age_txt.delete(0, tk.END)
+        self.price_txt.delete(0, tk.END)
         return
 
 class EditBottlePage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self,parent)
-        label = tk.Label(self, text="Edit Bottle")
-        label.pack(pady=10,padx=10)
+        controller.wm_title("Add a Bottle")
+
 
 app = TopShelfApp()
 app.mainloop()
