@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import messagebox
 import tkinter.ttk as ttk
 
 class TopShelfApp(tk.Tk):
@@ -135,7 +136,9 @@ class AddBottlePage(tk.Frame):
         return
 
     def cancel_entry(self):
-        self.clear_entry_boxes()
+        response = messagebox.askquestion("Confirm", "Are you sure you want to leave without saving?")
+        if response == messagebox.YES:
+            self.clear_entry_boxes()
         return
 
     def display_bottles(self):
