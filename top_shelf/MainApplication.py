@@ -68,6 +68,8 @@ class HomePage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self,parent)
 
+        global bottles
+        bottles = []
         self.display = tk.Label(self, text="Welcome! You have X bottles in your collection.")
         self.display.grid(column=1,columnspan=6, padx=20, pady=40)
         self.show_col_btn = ttk.Button(self, text="Show Collection", style='W.TButton')
@@ -84,6 +86,8 @@ class HomePage(tk.Frame):
 class AddBottlePage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self,parent)
+
+        global bottles
         controller.wm_title("Add a Bottle")
         self.distillery_lbl = tk.Label(self, text="Distillery: ")
         self.distillery_lbl.grid(row=1, column=1, columnspan=2, padx=20, pady=(20, 0), sticky=tk.W)
@@ -118,14 +122,25 @@ class AddBottlePage(tk.Frame):
         price = self.price_txt.get()
 
         new_bottle = Bottle(distillery, name, age, price)
-        print(vars(new_bottle))
+        bottles.append(new_bottle)
+        self.display_bottles()
+        self.clear_entry_boxes()
         return
 
-    def cancel_entry(self):
+    def clear_entry_boxes(self):
         self.distillery_txt.delete(0, tk.END)
         self.name_txt.delete(0, tk.END)
         self.age_txt.delete(0, tk.END)
         self.price_txt.delete(0, tk.END)
+        return
+
+    def cancel_entry(self):
+        self.clear_entry_boxes()
+        return
+
+    def display_bottles(self):
+        for bottle in bottles:
+            print(vars(bottle))
         return
 
 class EditBottlePage(tk.Frame):
