@@ -4,10 +4,9 @@ import tkinter.ttk as ttk
 import csv
 
 class TopShelfApp(tk.Tk):
-    global bottles
-    bottles = []
-
     def __init__(self, *args, **kwargs):
+        global bottles
+        bottles = []
         tk.Tk.__init__(self, *args, **kwargs)
         self.geometry('370x250')
         tk.Tk.iconbitmap(self,default='')
@@ -18,6 +17,9 @@ class TopShelfApp(tk.Tk):
         style = ttk.Style()
         style.configure('W.TButton', font =('calibri', 12))
 
+        bottles = self.read_csv_file()
+
+        print(f'Bottle from CSV are {bottles}')
         container = tk.Frame(self)
         container.pack(side="top", fill="both", expand = True)
         container.grid_rowconfigure(0, weight=1)
@@ -31,6 +33,16 @@ class TopShelfApp(tk.Tk):
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky=tk.NSEW)
         self.show_frame(HomePage)
+
+    def read_csv_file(self):
+        collection = []
+        with open("bottles.csv", "r") as file:
+            csv_reader = csv.reader(file)
+            for row in csv_reader:
+                bottle = Bottle(row[0], row[1], row[2], row[3])
+                collection.append(bottle)
+        print(collection)
+        return collection
 
     def show_frame(self, frame):
         """Make the frame visible"""
@@ -70,6 +82,7 @@ class TopShelfApp(tk.Tk):
     def save_entry(self, frame):
         """ Add details from the entry boxes to the list of bottles."""
 
+        global bottles
         distillery = frame.distillery_txt.get()
         name = frame.name_txt.get()
         age = frame.age_txt.get() if frame.age_txt.get() != "" else "N/A"
@@ -99,7 +112,7 @@ class TopShelfApp(tk.Tk):
 
     def on_closing(self):
         """ Ask user for confirmation when exiting the application"""
-
+        global bottles
         if messagebox.askokcancel("Quit", "Do you want to quit the application?"):
             try:
                 with open('bottles.csv', 'w+', newline ='') as file:
@@ -156,9 +169,8 @@ class Bottle(object):
 class HomePage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self,parent)
-
-        global bottles, current_bottle
-        self.display = tk.Label(self, text="Welcome! You have X bottles in your collection.")
+        global bottles
+        self.display = tk.Label(self, text=f'Welcome! You have {len(bottles)} bottles in your collection.')
         self.display.grid(column=1,columnspan=6, padx=20, pady=40)
         self.show_col_btn = ttk.Button(self, text="Show Collection", style='W.TButton')
         self.show_col_btn.grid(row=4, column=1,columnspan=3, padx=(20, 0), pady=(20,0), ipady=5, sticky=tk.NSEW)
@@ -173,13 +185,12 @@ class HomePage(tk.Frame):
 
 class AddBottlePage(tk.Frame):
     def __init__(self, parent, controller):
-        tk.Frame.__init__(self,parent)
-
         global bottles
-        controller.wm_title("Add a Bottle")
+        tk.Frame.__init__(self,parent)
         controller.render_bottle_details_layout(self)
 
     def display_bottles(self):
+        global bottles
         for bottle in bottles:
             print(vars(bottle))
         return
@@ -187,7 +198,6 @@ class AddBottlePage(tk.Frame):
 class EditBottlePage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self,parent)
-
         global bottles
         controller.render_bottle_details_layout(self)
 
