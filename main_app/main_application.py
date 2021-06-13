@@ -91,6 +91,7 @@ class TopShelfApp(tk.Tk):
         new_bottle = Bottle(distillery, name, age, price)
         bottles.append(new_bottle)
         frame.display_bottles()
+        messagebox.showinfo(title = "Confirmation", message = f'{new_bottle.distillery} {new_bottle.name} has been added to your collection.')
         self.clear_entry_boxes(frame)
         return
 
