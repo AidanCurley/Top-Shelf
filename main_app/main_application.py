@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import Frame, messagebox
+from tkinter import messagebox
 import tkinter.ttk as ttk
 import csv
 
@@ -27,8 +27,8 @@ class TopShelfApp(tk.Tk):
 
         # set up a dictionary to store the various frames
         self.frames = {}
-        # add our pages to tthe frames dictionary
-        for F in (HomePage, AddBottlePage, EditBottlePage):
+        # add our pages to the frames dictionary
+        for F in (HomePage, AddBottlePage, EditBottlePage, RemoveBottleDetailPage):
             frame = F(container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky=tk.NSEW)
@@ -43,6 +43,12 @@ class TopShelfApp(tk.Tk):
                 collection.append(bottle)
         print(collection)
         return collection
+
+    def display_bottles(self):
+        global bottles
+        for bottle in bottles:
+            print(vars(bottle))
+        return
 
     def show_frame(self, frame):
         """Make the frame visible"""
@@ -73,26 +79,103 @@ class TopShelfApp(tk.Tk):
         frame.price_txt = tk.Entry(frame)
         frame.price_txt.grid(row=4, column=3, columnspan=3, pady=(10, 0), sticky=tk.W)
 
+    def render_save_buttons(self, frame):
         frame.save_btn = ttk.Button(frame, text="Save Details", command=lambda: self.save_entry(frame))
         frame.save_btn.grid(row=6, column=1,columnspan=3, padx=(20, 0), pady=(20,0), ipady=5, sticky=tk.NSEW)
 
         frame.cancel_btn = ttk.Button(frame, text="Cancel", command=lambda: self.cancel_entry(frame))
         frame.cancel_btn.grid(row=6, column=4,columnspan=3, pady=(20,0), ipady=5, sticky=tk.NSEW)
 
+    def render_update_buttons(self, frame):
+        frame.update_btn = ttk.Button(frame, text="Update", command=lambda: self.update_entry(frame))
+        frame.update_btn.grid(row=6, column=1,columnspan=3, padx=(20, 0), pady=(20,0), ipady=5, sticky=tk.NSEW)
+
+        frame.cancel_btn = ttk.Button(frame, text="Cancel", command=lambda: self.cancel_entry(frame))
+        frame.cancel_btn.grid(row=6, column=4,columnspan=3, pady=(20,0), ipady=5, sticky=tk.NSEW)
+
+    def render_remove_buttons(self, frame):
+        frame.remove_btn = ttk.Button(frame, text="Remove", command=lambda: self.remove_entry(frame))
+        frame.remove_btn.grid(row=6, column=1,columnspan=3, padx=(20, 0), pady=(20,0), ipady=5, sticky=tk.NSEW)
+
+        frame.cancel_btn = ttk.Button(frame, text="Cancel", command=lambda: self.cancel_entry(frame))
+        frame.cancel_btn.grid(row=6, column=4,columnspan=3, pady=(20,0), ipady=5, sticky=tk.NSEW)
+
     def save_entry(self, frame):
         """ Add details from the entry boxes to the list of bottles."""
+        global bottles
+        distillery, name, age, price = self.get_details_from_entry_boxes(frame)
+        new_bottle = Bottle(distillery, name, age, price)
+        bottles.append(new_bottle)
+        messagebox.showinfo(title = "Confirmation", message = f'{new_bottle.distillery} {new_bottle.name} has been added to your collection.')
+        self.clear_entry_boxes(frame)
+        self.update_homepage_display(self.frames[HomePage])
+        self.show_frame(HomePage)
+        return
 
+    def get_details_from_entry_boxes(self, frame):
         global bottles
         distillery = frame.distillery_txt.get()
         name = frame.name_txt.get()
         age = frame.age_txt.get() if frame.age_txt.get() != "" else "N/A"
         price = frame.price_txt.get()
+        return (distillery, name, age, price)
 
+    def update_entry(self, frame):
+        """ Add details from the entry boxes to the list of bottles."""
+
+        distillery, name, age, price = self.get_details_from_entry_boxes(frame)
         new_bottle = Bottle(distillery, name, age, price)
         bottles.append(new_bottle)
-        frame.display_bottles()
+        messagebox.showinfo(title = "Confirmation", message = f'{new_bottle.distillery} {new_bottle.name} has been added to your collection.')
         self.clear_entry_boxes(frame)
+        bottles.pop(0)
+        self.update_homepage_display(self.frames[HomePage])
+        self.show_frame(HomePage)
         return
+
+    def remove_entry(self, frame):
+        """Remove current bottle from the list of bottles."""
+
+        # TODO: make this responsive rather than just removing bottle 0
+        global bottles
+        bottles.pop(0)
+        messagebox.showinfo(title = "Confirmation", message = f'The bottle has been removed from your collection.')
+        self.update_homepage_display(self.frames[HomePage])
+        self.show_frame(HomePage)
+        return
+
+    def add_details_to_entry_boxes(self, frame, bottle):
+        """Add bottle details to entry boxes on the details screen."""
+
+        frame.distillery_txt.insert(0, bottle.distillery)
+        frame.name_txt.insert(0, bottle.name)
+        frame.age_txt.insert(0, bottle.age)
+        frame.price_txt.insert(0, bottle.price)
+        return
+
+    def render_homepage_display(self, frame):
+        global bottles
+        global display_string
+        display_string = tk.StringVar()
+        display_string.set(f'Welcome! You have {len(bottles)} bottles in your collection.')
+        frame.display = tk.Label(frame, textvariable = display_string)
+        frame.display.grid(column=1,columnspan=6, padx=20, pady=40)
+        frame.show_col_btn = ttk.Button(frame, text="Show Collection", style='W.TButton', command = lambda: self.display_bottles())
+        frame.show_col_btn.grid(row=4, column=1,columnspan=3, padx=(20, 0), pady=(20,0), ipady=5, sticky=tk.NSEW)
+        frame.find_btn = ttk.Button(frame, text="Find a Bottle", style='W.TButton')
+        frame.find_btn.grid(row=4, column=4,columnspan=3, pady=(20,0), ipady=5, sticky=tk.NSEW)
+        frame.add_btn = ttk.Button(frame, text="Add a Bottle", style='W.TButton', command = lambda: self.show_frame(AddBottlePage))
+        frame.add_btn.grid(row=5, column=1,columnspan=2, padx=(20, 0), pady=(20,0), ipady=5)
+        frame.edit_btn = ttk.Button(frame, text="Edit a Bottle", style='W.TButton', command = lambda: self.show_frame(EditBottlePage))
+        frame.edit_btn.grid(row=5, column=3,columnspan=2, pady=(20,0), ipady=5)
+        frame.remove_btn = ttk.Button(frame, text="Remove a Bottle", style='W.TButton', command = lambda: self.show_frame(RemoveBottleDetailPage))
+        frame.remove_btn.grid(row=5, column=5,columnspan=2, pady=(20,0), ipady=5)
+
+    def update_homepage_display(self, frame):
+        global bottles
+        global display_string
+        print(bottles)
+        display_string.set(f'Welcome! You have {len(bottles)} bottles in your collection.')
 
     def clear_entry_boxes(self, frame):
         """ Clear contents of the entry boxes on the details screen."""
@@ -112,6 +195,7 @@ class TopShelfApp(tk.Tk):
 
     def on_closing(self):
         """ Ask user for confirmation when exiting the application"""
+
         global bottles
         if messagebox.askokcancel("Quit", "Do you want to quit the application?"):
             try:
@@ -153,54 +237,48 @@ class Bottle(object):
     def __init__(self, distillery, name, age, price):
         for character in distillery:
             if character.isdigit():
-                raise InputError("distillery", "The distillery name can only include alphabetic characters.")
+                raise InputError("distillery", "Invalid entry: The distillery name can only include alphabetic characters.")
         self.distillery = distillery.title()
         self.name = str(name).title()
         try:
             self.price = "{:.2f}".format(float(price))
         except ValueError:
-            raise InputError("price", "The price must be a number in the following format: ##.##")
+            raise InputError("price", "Invalid entry: The price must be a number in the following format: ##.##")
 
         if age.isnumeric() or age == "N/A":
             self.age = age
         else:
-            raise InputError("age", "The age must be a whole number.")
+            raise InputError("age", "Invalid entry: The age must be a whole number.")
 
 class HomePage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self,parent)
         global bottles
-        self.display = tk.Label(self, text=f'Welcome! You have {len(bottles)} bottles in your collection.')
-        self.display.grid(column=1,columnspan=6, padx=20, pady=40)
-        self.show_col_btn = ttk.Button(self, text="Show Collection", style='W.TButton')
-        self.show_col_btn.grid(row=4, column=1,columnspan=3, padx=(20, 0), pady=(20,0), ipady=5, sticky=tk.NSEW)
-        self.find_btn = ttk.Button(self, text="Find a Bottle", style='W.TButton')
-        self.find_btn.grid(row=4, column=4,columnspan=3, pady=(20,0), ipady=5, sticky=tk.NSEW)
-        self.add_btn = ttk.Button(self, text="Add a Bottle", style='W.TButton', command = lambda: controller.show_frame(AddBottlePage))
-        self.add_btn.grid(row=5, column=1,columnspan=2, padx=(20, 0), pady=(20,0), ipady=5)
-        self.edit_btn = ttk.Button(self, text="Edit a Bottle", style='W.TButton', command = lambda: controller.show_frame(EditBottlePage))
-        self.edit_btn.grid(row=5, column=3,columnspan=2, pady=(20,0), ipady=5)
-        self.remove_btn = ttk.Button(self, text="Remove a Bottle", style='W.TButton')
-        self.remove_btn.grid(row=5, column=5,columnspan=2, pady=(20,0), ipady=5)
+        controller.render_homepage_display(self)
+
 
 class AddBottlePage(tk.Frame):
     def __init__(self, parent, controller):
         global bottles
         tk.Frame.__init__(self,parent)
         controller.render_bottle_details_layout(self)
-
-    def display_bottles(self):
-        global bottles
-        for bottle in bottles:
-            print(vars(bottle))
-        return
+        controller.render_save_buttons(self)
 
 class EditBottlePage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self,parent)
         global bottles
         controller.render_bottle_details_layout(self)
+        controller.render_update_buttons(self)
+        controller.add_details_to_entry_boxes(self, bottles[0])
 
+class RemoveBottleDetailPage(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self,parent)
+        global bottles
+        controller.render_bottle_details_layout(self)
+        controller.render_remove_buttons(self)
+        controller.add_details_to_entry_boxes(self, bottles[0])
 
 
 app = TopShelfApp()
