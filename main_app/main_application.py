@@ -3,6 +3,8 @@ from tkinter import Frame, messagebox
 import tkinter.ttk as ttk
 
 class TopShelfApp(tk.Tk):
+    global bottles
+    bottles = []
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
         self.geometry('370x250')
@@ -121,7 +123,6 @@ class HomePage(tk.Frame):
         tk.Frame.__init__(self,parent)
 
         global bottles, current_bottle
-        bottles = [Bottle("distillery", "name", "1", "1")]
         self.display = tk.Label(self, text="Welcome! You have X bottles in your collection.")
         self.display.grid(column=1,columnspan=6, padx=20, pady=40)
         self.show_col_btn = ttk.Button(self, text="Show Collection", style='W.TButton')
@@ -144,6 +145,7 @@ class AddBottlePage(tk.Frame):
         controller.render_bottle_details_layout(self)
 
     def display_bottles(self):
+        global bottles
         for bottle in bottles:
             print(vars(bottle))
         return
