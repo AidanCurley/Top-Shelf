@@ -112,6 +112,7 @@ class TopShelfApp(tk.Tk):
 
     def on_closing(self):
         """ Ask user for confirmation when exiting the application"""
+
         global bottles
         if messagebox.askokcancel("Quit", "Do you want to quit the application?"):
             try:
