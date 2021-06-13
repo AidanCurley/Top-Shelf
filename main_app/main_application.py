@@ -155,18 +155,18 @@ class Bottle(object):
     def __init__(self, distillery, name, age, price):
         for character in distillery:
             if character.isdigit():
-                raise InputError("distillery", "The distillery name can only include alphabetic characters.")
+                raise InputError("distillery", "Invalid entry: The distillery name can only include alphabetic characters.")
         self.distillery = distillery.title()
         self.name = str(name).title()
         try:
             self.price = "{:.2f}".format(float(price))
         except ValueError:
-            raise InputError("price", "The price must be a number in the following format: ##.##")
+            raise InputError("price", "Invalid entry: The price must be a number in the following format: ##.##")
 
         if age.isnumeric() or age == "N/A":
             self.age = age
         else:
-            raise InputError("age", "The age must be a whole number.")
+            raise InputError("age", "Invalid entry: The age must be a whole number.")
 
 class HomePage(tk.Frame):
     def __init__(self, parent, controller):
