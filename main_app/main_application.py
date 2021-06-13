@@ -27,7 +27,7 @@ class TopShelfApp(tk.Tk):
 
         # set up a dictionary to store the various frames
         self.frames = {}
-        # add our pages to tthe frames dictionary
+        # add our pages to the frames dictionary
         for F in (HomePage, AddBottlePage, EditBottlePage):
             frame = F(container, self)
             self.frames[F] = frame
