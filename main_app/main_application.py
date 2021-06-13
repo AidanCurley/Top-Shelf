@@ -129,6 +129,14 @@ class InputError(Error):
         messagebox.showerror(title=expression, message=message)
 
 class Bottle(object):
+    """ Object to hold bottle details
+        Attributes:
+        distillery -- the name of the distillery
+        name -- the name of the bottle
+        price -- the price of the bottle in pounds
+        age -- the age of the bottle in whole years
+    """
+
     def __init__(self, distillery, name, age, price):
         for character in distillery:
             if character.isdigit():
@@ -172,7 +180,6 @@ class AddBottlePage(tk.Frame):
         controller.render_bottle_details_layout(self)
 
     def display_bottles(self):
-        global bottles
         for bottle in bottles:
             print(vars(bottle))
         return
