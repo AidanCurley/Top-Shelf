@@ -1,15 +1,19 @@
 import tkinter as tk
 from tkinter import Frame, messagebox
 import tkinter.ttk as ttk
+import csv
 
 class TopShelfApp(tk.Tk):
     global bottles
     bottles = []
+
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
         self.geometry('370x250')
         tk.Tk.iconbitmap(self,default='')
         tk.Tk.wm_title(self, "Top Shelf")
+
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
 
         style = ttk.Style()
         style.configure('W.TButton', font =('calibri', 12))
@@ -29,10 +33,14 @@ class TopShelfApp(tk.Tk):
         self.show_frame(HomePage)
 
     def show_frame(self, frame):
+        """Make the frame visible"""
+
         current_frame = self.frames[frame]
         current_frame.tkraise()
 
     def render_bottle_details_layout(self, frame):
+        """Add the labels, entry boxes and buttons for bottle details to the frame"""
+
         frame.distillery_lbl = tk.Label(frame, text="Distillery: ")
         frame.distillery_lbl.grid(row=1, column=1, columnspan=2, padx=20, pady=(20, 0), sticky=tk.W)
         frame.distillery_txt = tk.Entry(frame)
@@ -60,6 +68,8 @@ class TopShelfApp(tk.Tk):
         frame.cancel_btn.grid(row=6, column=4,columnspan=3, pady=(20,0), ipady=5, sticky=tk.NSEW)
 
     def save_entry(self, frame):
+        """ Add details from the entry boxes to the list of bottles."""
+
         distillery = frame.distillery_txt.get()
         name = frame.name_txt.get()
         age = frame.age_txt.get() if frame.age_txt.get() != "" else "N/A"
@@ -72,6 +82,8 @@ class TopShelfApp(tk.Tk):
         return
 
     def clear_entry_boxes(self, frame):
+        """ Clear contents of the entry boxes on the details screen."""
+
         frame.distillery_txt.delete(0, tk.END)
         frame.name_txt.delete(0, tk.END)
         frame.age_txt.delete(0, tk.END)
@@ -84,6 +96,21 @@ class TopShelfApp(tk.Tk):
             self.clear_entry_boxes(frame)
             self.show_frame(HomePage)
         return
+
+    def on_closing(self):
+        """ Ask user for confirmation when exiting the application"""
+
+        if messagebox.askokcancel("Quit", "Do you want to quit the application?"):
+            try:
+                with open('bottles.csv', 'w+', newline ='') as file:
+                    writer = csv.writer(file)
+                    for bottle in bottles:
+                        writer.writerow([bottle.distillery, bottle.name, bottle.age, bottle.price])
+            except BaseException:
+                messagebox.showwarning(title = 'Warning', message = "There's been a problem saving your session to memory.")
+            else:
+                messagebox.showinfo(title = 'Confirmation', message = 'Your session has been saved successfully! Goodbye.')
+                self.destroy()
 
 
 class Error(Exception):
