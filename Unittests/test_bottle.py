@@ -1,5 +1,6 @@
 import unittest
 from main_app.main_application import Bottle, InputError
+
 class BottleTests(unittest.TestCase):
     def test_name_Uigeadail_expect_Uigeadail(self):
         bottle = Bottle("Ardbeg", "Uigeadail", "N/A", 55.95)
