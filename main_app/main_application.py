@@ -108,7 +108,7 @@ class TopShelfApp(tk.Tk):
         bottles.append(new_bottle)
         messagebox.showinfo(title = "Confirmation", message = f'{new_bottle.distillery} {new_bottle.name} has been added to your collection.')
         self.clear_entry_boxes(frame)
-        self.update_homepage_display(self.frames[HomePage])
+        self.update_homepage_display()
         self.show_frame(HomePage)
         return
 
@@ -129,7 +129,7 @@ class TopShelfApp(tk.Tk):
         messagebox.showinfo(title = "Confirmation", message = f'{new_bottle.distillery} {new_bottle.name} has been added to your collection.')
         self.clear_entry_boxes(frame)
         bottles.pop(0)
-        self.update_homepage_display(self.frames[HomePage])
+        self.update_homepage_display()
         self.show_frame(HomePage)
         return
 
@@ -140,7 +140,7 @@ class TopShelfApp(tk.Tk):
         global bottles
         bottles.pop(0)
         messagebox.showinfo(title = "Confirmation", message = f'The bottle has been removed from your collection.')
-        self.update_homepage_display(self.frames[HomePage])
+        self.update_homepage_display()
         self.show_frame(HomePage)
         return
 
@@ -149,7 +149,7 @@ class TopShelfApp(tk.Tk):
 
         frame.distillery_txt.insert(0, bottle.distillery)
         frame.name_txt.insert(0, bottle.name)
-        frame.age_txt.insert(0, bottle.age)
+        frame.age_txt.insert(0, bottle.age if bottle.age > 0 else 'N/A')
         frame.price_txt.insert(0, bottle.price)
         return
 
@@ -162,7 +162,7 @@ class TopShelfApp(tk.Tk):
         frame.display.grid(column=1,columnspan=6, padx=20, pady=40)
         frame.show_col_btn = ttk.Button(frame, text="Show Collection", style='W.TButton', command = lambda: self.display_bottles())
         frame.show_col_btn.grid(row=4, column=1,columnspan=3, padx=(20, 0), pady=(20,0), ipady=5, sticky=tk.NSEW)
-        frame.find_btn = ttk.Button(frame, text="Find a Bottle", style='W.TButton')
+        frame.find_btn = ttk.Button(frame, text="Find a Bottle", style='W.TButton', command = lambda: self.sort_bottles_by("price"))
         frame.find_btn.grid(row=4, column=4,columnspan=3, pady=(20,0), ipady=5, sticky=tk.NSEW)
         frame.add_btn = ttk.Button(frame, text="Add a Bottle", style='W.TButton', command = lambda: self.show_frame(AddBottlePage))
         frame.add_btn.grid(row=5, column=1,columnspan=2, padx=(20, 0), pady=(20,0), ipady=5)
@@ -171,7 +171,7 @@ class TopShelfApp(tk.Tk):
         frame.remove_btn = ttk.Button(frame, text="Remove a Bottle", style='W.TButton', command = lambda: self.show_frame(RemoveBottleDetailPage))
         frame.remove_btn.grid(row=5, column=5,columnspan=2, pady=(20,0), ipady=5)
 
-    def update_homepage_display(self, frame):
+    def update_homepage_display(self):
         global bottles
         global display_string
         print(bottles)
@@ -209,11 +209,16 @@ class TopShelfApp(tk.Tk):
                 messagebox.showinfo(title = 'Confirmation', message = 'Your session has been saved successfully! Goodbye.')
                 self.destroy()
 
+    def sort_bottles_by(self, attribute):
+        """sorts the list of bottles by the specified attribute"""
+        global bottles
+        print(attribute)
+        bottles = sorted(bottles, key=lambda bottle: getattr(bottle, attribute))
+        self.display_bottles()
 
 class Error(Exception):
     """Base class for exceptions in this app"""
     pass
-
 
 class InputError(Error):
     """ Exception raised when there is an error in the input
@@ -242,12 +247,16 @@ class Bottle(object):
         self.name = str(name).title()
         try:
             self.price = "{:.2f}".format(float(price))
+            self.price = float(price)
         except ValueError:
             raise InputError("price", "Invalid entry: The price must be a number in the following format: ##.##")
 
-        if age.isnumeric() or age == "N/A":
-            self.age = age
-        else:
+        try:
+            if age == "N/A":
+                self.age = 0
+            else:
+                self.age = int(age)
+        except:
             raise InputError("age", "Invalid entry: The age must be a whole number.")
 
 class HomePage(tk.Frame):

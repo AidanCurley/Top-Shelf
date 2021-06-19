@@ -24,11 +24,11 @@ class BottleTests(unittest.TestCase):
 
     def test_price_with_55point95_expect_55point95(self):
         bottle = Bottle("Ardbeg", "Uigeadail", "N/A", 55.95)
-        self.assertEqual(bottle.price, "55.95")
+        self.assertEqual(bottle.price, 55.95)
 
     def test_price_with_integer_expect_two_dps_added(self):
         bottle = Bottle("Ardbeg", "Uigeadail", "N/A", 55)
-        self.assertEqual(bottle.price, "55.00")
+        self.assertEqual(bottle.price, 55.00)
 
     def test_price_with_string_expect_inputerror(self):
         with self.assertRaises(InputError) as cm:
@@ -36,10 +36,13 @@ class BottleTests(unittest.TestCase):
             the_exception = cm.exception
             self.assertEqual(the_exception.title, "Price")
 
-
-    def test_age_NA_expect_NA(self):
+    def test_age_NA_expect_0(self):
         bottle = Bottle("Ardbeg", "Uigeadail", "N/A", 55)
-        self.assertEqual(bottle.age, "N/A")
+        self.assertEqual(bottle.age, 0)
+
+    def test_age_15_expect_15(self):
+        bottle = Bottle("Ardbeg", "Uigeadail", 15, 55)
+        self.assertEqual(bottle.age, 15)
 
     def test_age_with_string_expect_inputerror(self):
         with self.assertRaises(InputError) as cm:
