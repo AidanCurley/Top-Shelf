@@ -28,7 +28,7 @@ class TopShelfApp(tk.Tk):
         # set up a dictionary to store the various frames
         self.frames = {}
         # add our pages to the frames dictionary
-        for F in (HomePage, AddBottlePage, EditBottlePage, RemoveBottleDetailPage):
+        for F in (HomePage, AddBottlePage, EditBottlePage, RemoveBottleDetailPage, ShowCollectionPage):
             frame = F(container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky=tk.NSEW)
@@ -85,6 +85,21 @@ class TopShelfApp(tk.Tk):
 
         frame.cancel_btn = ttk.Button(frame, text="Cancel", command=lambda: self.cancel_entry(frame))
         frame.cancel_btn.grid(row=6, column=4,columnspan=3, pady=(20,0), ipady=5, sticky=tk.NSEW)
+
+    def render_table(self, frame):
+        columns = ('#1', '#2', '#3', '#4')
+        frame.tree = ttk.Treeview(frame, columns=columns, show='headings')
+        frame.tree.heading('#1', text='Distillery')
+        frame.tree.heading('#2', text='Name')
+        frame.tree.heading('#3', text='Age')
+        frame.tree.heading('#4', text='Price')
+        frame.tree.grid(row=0, column=0, sticky='nsew')
+
+    def add_bottles_to_table(self, table):
+        global bottles
+        # adding data to the treeview
+        for bottle in bottles:
+            table.insert('', tk.END, values=(bottle.distillery, bottle.name, bottle.age, bottle.price))
 
     def render_update_buttons(self, frame):
         frame.update_btn = ttk.Button(frame, text="Update", command=lambda: self.update_entry(frame))
@@ -160,7 +175,7 @@ class TopShelfApp(tk.Tk):
         display_string.set(f'Welcome! You have {len(bottles)} bottles in your collection.')
         frame.display = tk.Label(frame, textvariable = display_string)
         frame.display.grid(column=1,columnspan=6, padx=20, pady=40)
-        frame.show_col_btn = ttk.Button(frame, text="Show Collection", style='W.TButton', command = lambda: self.display_bottles())
+        frame.show_col_btn = ttk.Button(frame, text="Show Collection", style='W.TButton', command = lambda: self.show_frame(ShowCollectionPage))
         frame.show_col_btn.grid(row=4, column=1,columnspan=3, padx=(20, 0), pady=(20,0), ipady=5, sticky=tk.NSEW)
         frame.find_btn = ttk.Button(frame, text="Find a Bottle", style='W.TButton', command = lambda: self.sort_bottles_by("price"))
         frame.find_btn.grid(row=4, column=4,columnspan=3, pady=(20,0), ipady=5, sticky=tk.NSEW)
@@ -288,6 +303,14 @@ class RemoveBottleDetailPage(tk.Frame):
         controller.render_bottle_details_layout(self)
         controller.render_remove_buttons(self)
         controller.add_details_to_entry_boxes(self, bottles[0])
+
+
+class ShowCollectionPage(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        global bottles
+        controller.render_table(self)
+        controller.add_bottles_to_table(self.tree)
 
 
 app = TopShelfApp()
