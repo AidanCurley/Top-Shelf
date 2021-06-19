@@ -162,7 +162,7 @@ class TopShelfApp(tk.Tk):
         frame.display.grid(column=1,columnspan=6, padx=20, pady=40)
         frame.show_col_btn = ttk.Button(frame, text="Show Collection", style='W.TButton', command = lambda: self.display_bottles())
         frame.show_col_btn.grid(row=4, column=1,columnspan=3, padx=(20, 0), pady=(20,0), ipady=5, sticky=tk.NSEW)
-        frame.find_btn = ttk.Button(frame, text="Find a Bottle", style='W.TButton', command = lambda: self.sort_bottles_by("age"))
+        frame.find_btn = ttk.Button(frame, text="Find a Bottle", style='W.TButton', command = lambda: self.sort_bottles_by("price"))
         frame.find_btn.grid(row=4, column=4,columnspan=3, pady=(20,0), ipady=5, sticky=tk.NSEW)
         frame.add_btn = ttk.Button(frame, text="Add a Bottle", style='W.TButton', command = lambda: self.show_frame(AddBottlePage))
         frame.add_btn.grid(row=5, column=1,columnspan=2, padx=(20, 0), pady=(20,0), ipady=5)
