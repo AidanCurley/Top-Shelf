@@ -65,12 +65,6 @@ class TopShelfApp(tk.Tk):
         frame.price_txt.delete(0, tk.END)
         return
 
-    def display_bottles(self):
-        global bottles
-        for bottle in bottles:
-            print(vars(bottle))
-        return
-
     def get_details_from_entry_boxes(self, frame):
         global bottles
         distillery = frame.distillery_txt.get()
@@ -207,7 +201,6 @@ class TopShelfApp(tk.Tk):
         """sorts the list of bottles by the specified attribute"""
         global bottles
         bottles = sorted(bottles, key=lambda bottle: getattr(bottle, attribute))
-        self.display_bottles()
         self.show_frame(ShowCollectionPage)
 
     def update_entry(self, frame):
