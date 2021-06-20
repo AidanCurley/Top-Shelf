@@ -34,6 +34,69 @@ class TopShelfApp(tk.Tk):
             frame.grid(row=0, column=0, sticky=tk.NSEW)
         self.show_frame(HomePage)
 
+    def add_bottles_to_table(self, table):
+        global bottles
+        # adding data to the treeview
+        for bottle in bottles:
+            table.insert('', tk.END, values=(bottle.distillery, bottle.name, bottle.age, bottle.price))
+
+    def add_details_to_entry_boxes(self, frame, bottle):
+        """Add bottle details to entry boxes on the details screen."""
+
+        frame.distillery_txt.insert(0, bottle.distillery)
+        frame.name_txt.insert(0, bottle.name)
+        frame.age_txt.insert(0, bottle.age if bottle.age > 0 else 'N/A')
+        frame.price_txt.insert(0, bottle.price)
+        return
+
+    def cancel_entry(self, frame):
+        response = messagebox.askquestion("Confirm", "Are you sure you want to leave without saving?")
+        if response == messagebox.YES:
+            self.clear_entry_boxes(frame)
+            self.show_frame(HomePage)
+        return
+
+    def clear_entry_boxes(self, frame):
+        """ Clear contents of the entry boxes on the details screen."""
+
+        frame.distillery_txt.delete(0, tk.END)
+        frame.name_txt.delete(0, tk.END)
+        frame.age_txt.delete(0, tk.END)
+        frame.price_txt.delete(0, tk.END)
+        return
+
+    def display_bottles(self):
+        global bottles
+        for bottle in bottles:
+            print(vars(bottle))
+        return
+
+    def get_details_from_entry_boxes(self, frame):
+        global bottles
+        distillery = frame.distillery_txt.get()
+        name = frame.name_txt.get()
+        age = frame.age_txt.get() if frame.age_txt.get() != "" else "N/A"
+        price = frame.price_txt.get()
+        return (distillery, name, age, price)
+
+
+    def on_closing(self):
+        """ Ask user for confirmation when exiting the application"""
+
+        global bottles
+        if messagebox.askokcancel("Quit", "Do you want to quit the application?"):
+            try:
+                with open('bottles.csv', 'w+', newline ='') as file:
+                    writer = csv.writer(file)
+                    for bottle in bottles:
+                        writer.writerow([bottle.distillery, bottle.name, bottle.age, bottle.price])
+            except BaseException:
+                messagebox.showwarning(title = 'Warning', message = "There's been a problem saving your session to memory.")
+            else:
+                messagebox.showinfo(title = 'Confirmation', message = 'Your session has been saved successfully! Goodbye.')
+                self.destroy()
+
+
     def read_csv_file(self):
         collection = []
         with open("bottles.csv", "r") as file:
@@ -44,17 +107,15 @@ class TopShelfApp(tk.Tk):
         print(collection)
         return collection
 
-    def display_bottles(self):
+    def remove_entry(self, frame):
+        """Remove current bottle from the list of bottles."""
+
+        # TODO: make this responsive rather than just removing bottle 0
         global bottles
-        for bottle in bottles:
-            print(vars(bottle))
+        bottles.pop(0)
+        messagebox.showinfo(title = "Confirmation", message = f'The bottle has been removed from your collection.')
+        self.show_frame(HomePage)
         return
-
-    def show_frame(self, frame):
-        """Make the frame visible"""
-
-        current_frame = self.frames[frame]
-        current_frame.tkraise()
 
     def render_bottle_details_layout(self, frame):
         """Add the labels, entry boxes and buttons for bottle details to the frame"""
@@ -79,6 +140,22 @@ class TopShelfApp(tk.Tk):
         frame.price_txt = tk.Entry(frame)
         frame.price_txt.grid(row=4, column=3, columnspan=3, pady=(10, 0), sticky=tk.W)
 
+    def render_homepage_display(self, frame):
+        global bottles
+        frame.display_string.set(f'Welcome! You have {len(bottles)} bottles in your collection.')
+        frame.display = tk.Label(frame, textvariable = frame.display_string)
+        frame.display.grid(column=1,columnspan=6, padx=20, pady=40)
+        frame.show_col_btn = ttk.Button(frame, text="Show Collection", style='W.TButton', command = lambda: self.show_frame(ShowCollectionPage))
+        frame.show_col_btn.grid(row=4, column=1,columnspan=3, padx=(20, 0), pady=(20,0), ipady=5, sticky=tk.NSEW)
+        frame.find_btn = ttk.Button(frame, text="Find a Bottle", style='W.TButton', command = lambda: self.sort_bottles_by("price"))
+        frame.find_btn.grid(row=4, column=4,columnspan=3, pady=(20,0), ipady=5, sticky=tk.NSEW)
+        frame.add_btn = ttk.Button(frame, text="Add a Bottle", style='W.TButton', command = lambda: self.show_frame(AddBottlePage))
+        frame.add_btn.grid(row=5, column=1,columnspan=2, padx=(20, 0), pady=(20,0), ipady=5)
+        frame.edit_btn = ttk.Button(frame, text="Edit a Bottle", style='W.TButton', command = lambda: self.show_frame(EditBottlePage))
+        frame.edit_btn.grid(row=5, column=3,columnspan=2, pady=(20,0), ipady=5)
+        frame.remove_btn = ttk.Button(frame, text="Remove a Bottle", style='W.TButton', command = lambda: self.show_frame(RemoveBottleDetailPage))
+        frame.remove_btn.grid(row=5, column=5,columnspan=2, pady=(20,0), ipady=5)
+
     def render_save_buttons(self, frame):
         frame.save_btn = ttk.Button(frame, text="Save Details", command=lambda: self.save_entry(frame))
         frame.save_btn.grid(row=6, column=1,columnspan=3, padx=(20, 0), pady=(20,0), ipady=5, sticky=tk.NSEW)
@@ -94,12 +171,6 @@ class TopShelfApp(tk.Tk):
         frame.tree.heading('#3', text='Age')
         frame.tree.heading('#4', text='Price')
         frame.tree.grid(row=0, column=0, sticky='nsew')
-
-    def add_bottles_to_table(self, table):
-        global bottles
-        # adding data to the treeview
-        for bottle in bottles:
-            table.insert('', tk.END, values=(bottle.distillery, bottle.name, bottle.age, bottle.price))
 
     def render_update_buttons(self, frame):
         frame.update_btn = ttk.Button(frame, text="Update", command=lambda: self.update_entry(frame))
@@ -123,17 +194,21 @@ class TopShelfApp(tk.Tk):
         bottles.append(new_bottle)
         messagebox.showinfo(title = "Confirmation", message = f'{new_bottle.distillery} {new_bottle.name} has been added to your collection.')
         self.clear_entry_boxes(frame)
-        self.update_homepage_display()
         self.show_frame(HomePage)
         return
 
-    def get_details_from_entry_boxes(self, frame):
+    def show_frame(self, frame):
+        """Make the frame visible"""
+        current_frame = self.frames[frame]
+        current_frame.update_display(self)
+        current_frame.tkraise()
+
+    def sort_bottles_by(self, attribute):
+        """sorts the list of bottles by the specified attribute"""
         global bottles
-        distillery = frame.distillery_txt.get()
-        name = frame.name_txt.get()
-        age = frame.age_txt.get() if frame.age_txt.get() != "" else "N/A"
-        price = frame.price_txt.get()
-        return (distillery, name, age, price)
+        print(attribute)
+        bottles = sorted(bottles, key=lambda bottle: getattr(bottle, attribute))
+        self.display_bottles()
 
     def update_entry(self, frame):
         """ Add details from the entry boxes to the list of bottles."""
@@ -144,92 +219,10 @@ class TopShelfApp(tk.Tk):
         messagebox.showinfo(title = "Confirmation", message = f'{new_bottle.distillery} {new_bottle.name} has been added to your collection.')
         self.clear_entry_boxes(frame)
         bottles.pop(0)
-        self.update_homepage_display()
         self.show_frame(HomePage)
         return
 
-    def remove_entry(self, frame):
-        """Remove current bottle from the list of bottles."""
 
-        # TODO: make this responsive rather than just removing bottle 0
-        global bottles
-        bottles.pop(0)
-        messagebox.showinfo(title = "Confirmation", message = f'The bottle has been removed from your collection.')
-        self.update_homepage_display()
-        self.show_frame(HomePage)
-        return
-
-    def add_details_to_entry_boxes(self, frame, bottle):
-        """Add bottle details to entry boxes on the details screen."""
-
-        frame.distillery_txt.insert(0, bottle.distillery)
-        frame.name_txt.insert(0, bottle.name)
-        frame.age_txt.insert(0, bottle.age if bottle.age > 0 else 'N/A')
-        frame.price_txt.insert(0, bottle.price)
-        return
-
-    def render_homepage_display(self, frame):
-        global bottles
-        global display_string
-        display_string = tk.StringVar()
-        display_string.set(f'Welcome! You have {len(bottles)} bottles in your collection.')
-        frame.display = tk.Label(frame, textvariable = display_string)
-        frame.display.grid(column=1,columnspan=6, padx=20, pady=40)
-        frame.show_col_btn = ttk.Button(frame, text="Show Collection", style='W.TButton', command = lambda: self.show_frame(ShowCollectionPage))
-        frame.show_col_btn.grid(row=4, column=1,columnspan=3, padx=(20, 0), pady=(20,0), ipady=5, sticky=tk.NSEW)
-        frame.find_btn = ttk.Button(frame, text="Find a Bottle", style='W.TButton', command = lambda: self.sort_bottles_by("price"))
-        frame.find_btn.grid(row=4, column=4,columnspan=3, pady=(20,0), ipady=5, sticky=tk.NSEW)
-        frame.add_btn = ttk.Button(frame, text="Add a Bottle", style='W.TButton', command = lambda: self.show_frame(AddBottlePage))
-        frame.add_btn.grid(row=5, column=1,columnspan=2, padx=(20, 0), pady=(20,0), ipady=5)
-        frame.edit_btn = ttk.Button(frame, text="Edit a Bottle", style='W.TButton', command = lambda: self.show_frame(EditBottlePage))
-        frame.edit_btn.grid(row=5, column=3,columnspan=2, pady=(20,0), ipady=5)
-        frame.remove_btn = ttk.Button(frame, text="Remove a Bottle", style='W.TButton', command = lambda: self.show_frame(RemoveBottleDetailPage))
-        frame.remove_btn.grid(row=5, column=5,columnspan=2, pady=(20,0), ipady=5)
-
-    def update_homepage_display(self):
-        global bottles
-        global display_string
-        print(bottles)
-        display_string.set(f'Welcome! You have {len(bottles)} bottles in your collection.')
-
-    def clear_entry_boxes(self, frame):
-        """ Clear contents of the entry boxes on the details screen."""
-
-        frame.distillery_txt.delete(0, tk.END)
-        frame.name_txt.delete(0, tk.END)
-        frame.age_txt.delete(0, tk.END)
-        frame.price_txt.delete(0, tk.END)
-        return
-
-    def cancel_entry(self, frame):
-        response = messagebox.askquestion("Confirm", "Are you sure you want to leave without saving?")
-        if response == messagebox.YES:
-            self.clear_entry_boxes(frame)
-            self.show_frame(HomePage)
-        return
-
-    def on_closing(self):
-        """ Ask user for confirmation when exiting the application"""
-
-        global bottles
-        if messagebox.askokcancel("Quit", "Do you want to quit the application?"):
-            try:
-                with open('bottles.csv', 'w+', newline ='') as file:
-                    writer = csv.writer(file)
-                    for bottle in bottles:
-                        writer.writerow([bottle.distillery, bottle.name, bottle.age, bottle.price])
-            except BaseException:
-                messagebox.showwarning(title = 'Warning', message = "There's been a problem saving your session to memory.")
-            else:
-                messagebox.showinfo(title = 'Confirmation', message = 'Your session has been saved successfully! Goodbye.')
-                self.destroy()
-
-    def sort_bottles_by(self, attribute):
-        """sorts the list of bottles by the specified attribute"""
-        global bottles
-        print(attribute)
-        bottles = sorted(bottles, key=lambda bottle: getattr(bottle, attribute))
-        self.display_bottles()
 
 class Error(Exception):
     """Base class for exceptions in this app"""
@@ -277,7 +270,10 @@ class Bottle(object):
 class HomePage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self,parent)
-        global bottles
+        self.display_string = tk.StringVar()
+        self.update_display(controller)
+
+    def update_display(self, controller):
         controller.render_homepage_display(self)
 
 
@@ -285,6 +281,9 @@ class AddBottlePage(tk.Frame):
     def __init__(self, parent, controller):
         global bottles
         tk.Frame.__init__(self,parent)
+        self.update_display(controller)
+
+    def update_display(self, controller):
         controller.render_bottle_details_layout(self)
         controller.render_save_buttons(self)
 
@@ -292,6 +291,9 @@ class EditBottlePage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self,parent)
         global bottles
+        self.update_display(controller)
+
+    def update_display(self, controller):
         controller.render_bottle_details_layout(self)
         controller.render_update_buttons(self)
         controller.add_details_to_entry_boxes(self, bottles[0])
@@ -300,6 +302,9 @@ class RemoveBottleDetailPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self,parent)
         global bottles
+        self.update_display(controller)
+
+    def update_display(self, controller):
         controller.render_bottle_details_layout(self)
         controller.render_remove_buttons(self)
         controller.add_details_to_entry_boxes(self, bottles[0])
@@ -309,9 +314,11 @@ class ShowCollectionPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         global bottles
+        self.update_display(controller)
+
+    def update_display(self, controller):
         controller.render_table(self)
         controller.add_bottles_to_table(self.tree)
-
 
 app = TopShelfApp()
 app.mainloop()
