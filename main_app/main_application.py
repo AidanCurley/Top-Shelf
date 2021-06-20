@@ -166,10 +166,10 @@ class TopShelfApp(tk.Tk):
     def render_table(self, frame):
         columns = ('#1', '#2', '#3', '#4')
         frame.tree = ttk.Treeview(frame, columns=columns, show='headings')
-        frame.tree.heading('#1', text='Distillery')
-        frame.tree.heading('#2', text='Name')
-        frame.tree.heading('#3', text='Age')
-        frame.tree.heading('#4', text='Price')
+        frame.tree.heading('#1', text='Distillery', command = lambda: self.sort_bottles_by("distillery"))
+        frame.tree.heading('#2', text='Name', command = lambda: self.sort_bottles_by("name"))
+        frame.tree.heading('#3', text='Age', command = lambda: self.sort_bottles_by("age"))
+        frame.tree.heading('#4', text='Price', command = lambda: self.sort_bottles_by("price"))
         frame.tree.grid(row=0, column=0, sticky='nsew')
 
     def render_update_buttons(self, frame):
@@ -206,9 +206,9 @@ class TopShelfApp(tk.Tk):
     def sort_bottles_by(self, attribute):
         """sorts the list of bottles by the specified attribute"""
         global bottles
-        print(attribute)
         bottles = sorted(bottles, key=lambda bottle: getattr(bottle, attribute))
         self.display_bottles()
+        self.show_frame(ShowCollectionPage)
 
     def update_entry(self, frame):
         """ Add details from the entry boxes to the list of bottles."""
@@ -309,7 +309,6 @@ class RemoveBottleDetailPage(tk.Frame):
         controller.render_remove_buttons(self)
         controller.add_details_to_entry_boxes(self, bottles[0])
 
-
 class ShowCollectionPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -319,6 +318,14 @@ class ShowCollectionPage(tk.Frame):
     def update_display(self, controller):
         controller.render_table(self)
         controller.add_bottles_to_table(self.tree)
+
+    def OnDoubleClick(self, event):
+        region = self.tree.identify("region", event.x, event.y)
+        if region == "heading":
+            print(f'you clicked on {self.tree.heading(region ,"text")}')
+        else:
+            print(f'you clicked on {self.tree.region(region ,"value")}')
+
 
 app = TopShelfApp()
 app.mainloop()
