@@ -5,7 +5,7 @@ import csv
 
 class TopShelfApp(tk.Tk):
     def __init__(self, *args, **kwargs):
-        global bottles
+        global bottles; global current_bottle
         bottles = []
         tk.Tk.__init__(self, *args, **kwargs)
         self.geometry('370x250')
@@ -18,6 +18,7 @@ class TopShelfApp(tk.Tk):
         style.configure('W.TButton', font =('calibri', 12))
 
         bottles = self.read_csv_file()
+        current_bottle = 0
 
         print(f'Bottle from CSV are {bottles}')
         container = tk.Frame(self)
@@ -35,7 +36,7 @@ class TopShelfApp(tk.Tk):
         self.show_frame(HomePage)
 
     def add_bottles_to_table(self, table):
-        global bottles
+        global bottles; global current_bottle
         # adding data to the treeview
         for bottle in bottles:
             table.insert('', tk.END, values=(bottle.distillery, bottle.name, bottle.age, bottle.price))
@@ -66,7 +67,7 @@ class TopShelfApp(tk.Tk):
         return
 
     def get_details_from_entry_boxes(self, frame):
-        global bottles
+        global bottles; global current_bottle
         distillery = frame.distillery_txt.get()
         name = frame.name_txt.get()
         age = frame.age_txt.get() if frame.age_txt.get() != "" else "N/A"
@@ -77,7 +78,7 @@ class TopShelfApp(tk.Tk):
     def on_closing(self):
         """ Ask user for confirmation when exiting the application"""
 
-        global bottles
+        global bottles; global current_bottle
         if messagebox.askokcancel("Quit", "Do you want to quit the application?"):
             try:
                 with open('bottles.csv', 'w+', newline ='') as file:
@@ -103,10 +104,8 @@ class TopShelfApp(tk.Tk):
 
     def remove_entry(self, frame):
         """Remove current bottle from the list of bottles."""
-
-        # TODO: make this responsive rather than just removing bottle 0
-        global bottles
-        bottles.pop(0)
+        global bottles; global current_bottle
+        bottles.pop(current_bottle)
         messagebox.showinfo(title = "Confirmation", message = f'The bottle has been removed from your collection.')
         self.show_frame(HomePage)
         return
@@ -135,7 +134,7 @@ class TopShelfApp(tk.Tk):
         frame.price_txt.grid(row=4, column=3, columnspan=3, pady=(10, 0), sticky=tk.W)
 
     def render_homepage_display(self, frame):
-        global bottles
+        global bottles; global current_bottle
         frame.display_string.set(f'Welcome! You have {len(bottles)} bottles in your collection.')
         frame.display = tk.Label(frame, textvariable = frame.display_string)
         frame.display.grid(column=1,columnspan=6, padx=20, pady=40)
@@ -165,6 +164,8 @@ class TopShelfApp(tk.Tk):
         frame.tree.heading('#3', text='Age', command = lambda: self.sort_bottles_by("age"))
         frame.tree.heading('#4', text='Price', command = lambda: self.sort_bottles_by("price"))
         frame.tree.grid(row=0, column=0, sticky='nsew')
+        frame.tree.bind("<Double-1>", lambda e: frame.on_double_click(e, self))
+
 
     def render_update_buttons(self, frame):
         frame.update_btn = ttk.Button(frame, text="Update", command=lambda: self.update_entry(frame))
@@ -182,7 +183,7 @@ class TopShelfApp(tk.Tk):
 
     def save_entry(self, frame):
         """ Add details from the entry boxes to the list of bottles."""
-        global bottles
+        global bottles; global current_bottle
         distillery, name, age, price = self.get_details_from_entry_boxes(frame)
         new_bottle = Bottle(distillery, name, age, price)
         bottles.append(new_bottle)
@@ -199,7 +200,7 @@ class TopShelfApp(tk.Tk):
 
     def sort_bottles_by(self, attribute):
         """sorts the list of bottles by the specified attribute"""
-        global bottles
+        global bottles; global current_bottle
         bottles = sorted(bottles, key=lambda bottle: getattr(bottle, attribute))
         self.show_frame(ShowCollectionPage)
 
@@ -272,7 +273,7 @@ class HomePage(tk.Frame):
 
 class AddBottlePage(tk.Frame):
     def __init__(self, parent, controller):
-        global bottles
+        global bottles; global current_bottle
         tk.Frame.__init__(self,parent)
         self.update_display(controller)
 
@@ -283,41 +284,45 @@ class AddBottlePage(tk.Frame):
 class EditBottlePage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self,parent)
-        global bottles
+        global bottles; global current_bottle
         self.update_display(controller)
 
     def update_display(self, controller):
+        global current_bottle
         controller.render_bottle_details_layout(self)
         controller.render_update_buttons(self)
-        controller.add_details_to_entry_boxes(self, bottles[0])
+        controller.add_details_to_entry_boxes(self, bottles[current_bottle])
 
 class RemoveBottleDetailPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self,parent)
-        global bottles
+        global bottles; global current_bottle
         self.update_display(controller)
 
     def update_display(self, controller):
+        global bottles; global current_bottle
         controller.render_bottle_details_layout(self)
         controller.render_remove_buttons(self)
-        controller.add_details_to_entry_boxes(self, bottles[0])
+        controller.add_details_to_entry_boxes(self, bottles[current_bottle])
 
 class ShowCollectionPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        global bottles
+        global bottles; global current_bottle
         self.update_display(controller)
 
     def update_display(self, controller):
         controller.render_table(self)
         controller.add_bottles_to_table(self.tree)
 
-    def OnDoubleClick(self, event):
-        region = self.tree.identify("region", event.x, event.y)
-        if region == "heading":
-            print(f'you clicked on {self.tree.heading(region ,"text")}')
-        else:
-            print(f'you clicked on {self.tree.region(region ,"value")}')
+    def on_double_click(self, event, controller):
+        global bottles; global current_bottle
+        item = self.tree.identify('item',event.x, event.y)
+        vals = self.tree.item(self.tree.focus())
+        for index, bottle in enumerate(bottles):
+            if bottle.distillery == vals['values'][0] and bottle.name == vals['values'][1]:
+                current_bottle = index
+        controller.show_frame(RemoveBottleDetailPage)
 
 
 app = TopShelfApp()
