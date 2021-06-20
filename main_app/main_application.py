@@ -19,6 +19,8 @@ class TopShelfApp(tk.Tk):
 
         bottles = self.read_csv_file()
         current_bottle = 0
+        self.modes = {"edit" : 1, "remove" : 2, "show" : 3}
+        self.mode = self.modes['edit']
 
         print(f'Bottle from CSV are {bottles}')
         container = tk.Frame(self)
@@ -66,6 +68,10 @@ class TopShelfApp(tk.Tk):
         frame.price_txt.delete(0, tk.END)
         return
 
+    def edit_bottle(self):
+        self.mode = self.modes['edit']
+        self.show_frame(ShowCollectionPage)
+
     def get_details_from_entry_boxes(self, frame):
         global bottles; global current_bottle
         distillery = frame.distillery_txt.get()
@@ -101,6 +107,10 @@ class TopShelfApp(tk.Tk):
                 collection.append(bottle)
         print(collection)
         return collection
+
+    def remove_bottle(self):
+        self.mode = self.modes['remove']
+        self.show_frame(ShowCollectionPage)
 
     def remove_entry(self, frame):
         """Remove current bottle from the list of bottles."""
@@ -140,13 +150,13 @@ class TopShelfApp(tk.Tk):
         frame.display.grid(column=1,columnspan=6, padx=20, pady=40)
         frame.show_col_btn = ttk.Button(frame, text="Show Collection", style='W.TButton', command = lambda: self.show_frame(ShowCollectionPage))
         frame.show_col_btn.grid(row=4, column=1,columnspan=3, padx=(20, 0), pady=(20,0), ipady=5, sticky=tk.NSEW)
-        frame.find_btn = ttk.Button(frame, text="Find a Bottle", style='W.TButton', command = lambda: self.sort_bottles_by("price"))
+        frame.find_btn = ttk.Button(frame, text="Find a Bottle", style='W.TButton')
         frame.find_btn.grid(row=4, column=4,columnspan=3, pady=(20,0), ipady=5, sticky=tk.NSEW)
         frame.add_btn = ttk.Button(frame, text="Add a Bottle", style='W.TButton', command = lambda: self.show_frame(AddBottlePage))
         frame.add_btn.grid(row=5, column=1,columnspan=2, padx=(20, 0), pady=(20,0), ipady=5)
-        frame.edit_btn = ttk.Button(frame, text="Edit a Bottle", style='W.TButton', command = lambda: self.show_frame(EditBottlePage))
+        frame.edit_btn = ttk.Button(frame, text="Edit a Bottle", style='W.TButton', command = lambda: self.edit_bottle())
         frame.edit_btn.grid(row=5, column=3,columnspan=2, pady=(20,0), ipady=5)
-        frame.remove_btn = ttk.Button(frame, text="Remove a Bottle", style='W.TButton', command = lambda: self.show_frame(RemoveBottleDetailPage))
+        frame.remove_btn = ttk.Button(frame, text="Remove a Bottle", style='W.TButton', command = lambda: self.remove_bottle())
         frame.remove_btn.grid(row=5, column=5,columnspan=2, pady=(20,0), ipady=5)
 
     def render_save_buttons(self, frame):
@@ -165,6 +175,9 @@ class TopShelfApp(tk.Tk):
         frame.tree.heading('#4', text='Price', command = lambda: self.sort_bottles_by("price"))
         frame.tree.grid(row=0, column=0, sticky='nsew')
         frame.tree.bind("<Double-1>", lambda e: frame.on_double_click(e, self))
+        frame.instructions_lbl = tk.Label(frame, textvariable = frame.instructions)
+
+
 
 
     def render_update_buttons(self, frame):
@@ -206,13 +219,13 @@ class TopShelfApp(tk.Tk):
 
     def update_entry(self, frame):
         """ Add details from the entry boxes to the list of bottles."""
-
+        global bottles; global current_bottle
         distillery, name, age, price = self.get_details_from_entry_boxes(frame)
         new_bottle = Bottle(distillery, name, age, price)
         bottles.append(new_bottle)
         messagebox.showinfo(title = "Confirmation", message = f'{new_bottle.distillery} {new_bottle.name} has been added to your collection.')
         self.clear_entry_boxes(frame)
-        bottles.pop(0)
+        bottles.pop(current_bottle)
         self.show_frame(HomePage)
         return
 
@@ -252,7 +265,6 @@ class Bottle(object):
             self.price = float(price)
         except ValueError:
             raise InputError("price", "Invalid entry: The price must be a number in the following format: ##.##")
-
         try:
             if age == "N/A":
                 self.age = 0
@@ -309,7 +321,9 @@ class ShowCollectionPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         global bottles; global current_bottle
+        self.instructions = tk.StringVar()
         self.update_display(controller)
+
 
     def update_display(self, controller):
         controller.render_table(self)
@@ -322,8 +336,10 @@ class ShowCollectionPage(tk.Frame):
         for index, bottle in enumerate(bottles):
             if bottle.distillery == vals['values'][0] and bottle.name == vals['values'][1]:
                 current_bottle = index
-        controller.show_frame(RemoveBottleDetailPage)
-
+        if controller.mode == controller.modes['remove']:
+            controller.show_frame(RemoveBottleDetailPage)
+        else:
+            controller.show_frame(EditBottlePage)
 
 app = TopShelfApp()
 app.mainloop()
