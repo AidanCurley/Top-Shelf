@@ -8,7 +8,7 @@ class TopShelfApp(tk.Tk):
         global bottles; global current_bottle
         bottles = self.read_csv_file()
         current_bottle = 0
-        self.modes = {"edit" : 1, "remove" : 2, "show" : 3}
+        self.modes = {"edit" : "Double click a bottle to edit it", "remove" : "Double click a bottle to remove it from your collection", "show" : "Double click a bottle for more details"}
         self.mode = self.modes['edit']
         self.NA = 0
 
@@ -19,7 +19,6 @@ class TopShelfApp(tk.Tk):
 
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
 
-        print(f'Bottle from CSV are {bottles}')
         container = tk.Frame(self)
         container.pack(side="top", fill="both", expand = True)
         container.grid_rowconfigure(0, weight=1)
@@ -101,7 +100,6 @@ class TopShelfApp(tk.Tk):
             for row in csv_reader:
                 bottle = Bottle(row[0], row[1], row[2], row[3])
                 collection.append(bottle)
-        print(collection)
         return collection
 
     def remove_bottle(self):
@@ -144,7 +142,7 @@ class TopShelfApp(tk.Tk):
         frame.display_string.set(f'Welcome! You have {len(bottles)} bottles in your collection.')
         frame.display = tk.Label(frame, textvariable = frame.display_string)
         frame.display.grid(column=1,columnspan=6, padx=20, pady=40)
-        frame.show_col_btn = ttk.Button(frame, text="Show Collection", style='W.TButton', command = lambda: self.show_frame(ShowCollectionPage))
+        frame.show_col_btn = ttk.Button(frame, text="Show Collection", style='W.TButton', command = lambda: self.show_collection())
         frame.show_col_btn.grid(row=4, column=1,columnspan=3, padx=(20, 0), pady=(20,0), ipady=5, sticky=tk.NSEW)
         frame.find_btn = ttk.Button(frame, text="Find a Bottle", style='W.TButton')
         frame.find_btn.grid(row=4, column=4,columnspan=3, pady=(20,0), ipady=5, sticky=tk.NSEW)
@@ -172,6 +170,7 @@ class TopShelfApp(tk.Tk):
         frame.tree.grid(row=0, column=0, sticky='nsew')
         frame.tree.bind("<Double-1>", lambda e: frame.on_double_click(e, self))
         frame.instructions_lbl = tk.Label(frame, textvariable = frame.instructions)
+        frame.instructions_lbl.grid(row=10,column=0)
 
     def render_update_buttons(self, frame):
         frame.update_btn = ttk.Button(frame, text="Update", command=lambda: self.update_entry(frame))
@@ -197,6 +196,10 @@ class TopShelfApp(tk.Tk):
         self.clear_entry_boxes(frame)
         self.show_frame(HomePage)
         return
+
+    def show_collection(self):
+        self.mode = self.modes['show']
+        self.show_frame(ShowCollectionPage)
 
     def show_frame(self, frame):
         """Make the frame visible"""
@@ -323,6 +326,7 @@ class ShowCollectionPage(tk.Frame):
 
 
     def update_display(self, controller):
+        self.instructions.set(controller.mode)
         controller.render_table(self)
         controller.add_bottles_to_table(self.tree)
         tk.Tk.wm_title(controller, "My Collection")
