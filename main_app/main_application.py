@@ -6,21 +6,18 @@ import csv
 class TopShelfApp(tk.Tk):
     def __init__(self, *args, **kwargs):
         global bottles; global current_bottle
-        bottles = []
+        bottles = self.read_csv_file()
+        current_bottle = 0
+        self.modes = {"edit" : 1, "remove" : 2, "show" : 3}
+        self.mode = self.modes['edit']
+        self.NA = 0
+
         tk.Tk.__init__(self, *args, **kwargs)
         self.geometry('370x250')
         tk.Tk.iconbitmap(self,default='')
         tk.Tk.wm_title(self, "Top Shelf")
 
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
-
-        style = ttk.Style()
-        style.configure('W.TButton', font =('calibri', 12))
-
-        bottles = self.read_csv_file()
-        current_bottle = 0
-        self.modes = {"edit" : 1, "remove" : 2, "show" : 3}
-        self.mode = self.modes['edit']
 
         print(f'Bottle from CSV are {bottles}')
         container = tk.Frame(self)
@@ -41,14 +38,14 @@ class TopShelfApp(tk.Tk):
         global bottles; global current_bottle
         # adding data to the treeview
         for bottle in bottles:
-            table.insert('', tk.END, values=(bottle.distillery, bottle.name, bottle.age, bottle.price))
+            table.insert('', tk.END, values=(bottle.distillery, bottle.name, bottle.age if bottle.age != self.NA else 'N/A', bottle.price))
 
     def add_details_to_entry_boxes(self, frame, bottle):
         """Add bottle details to entry boxes on the details screen."""
 
         frame.distillery_txt.insert(0, bottle.distillery)
         frame.name_txt.insert(0, bottle.name)
-        frame.age_txt.insert(0, bottle.age if bottle.age > 0 else 'N/A')
+        frame.age_txt.insert(0, bottle.age if bottle.age != self.NA else 'N/A')
         frame.price_txt.insert(0, bottle.price)
         return
 
@@ -61,7 +58,6 @@ class TopShelfApp(tk.Tk):
 
     def clear_entry_boxes(self, frame):
         """ Clear contents of the entry boxes on the details screen."""
-
         frame.distillery_txt.delete(0, tk.END)
         frame.name_txt.delete(0, tk.END)
         frame.age_txt.delete(0, tk.END)
@@ -112,7 +108,7 @@ class TopShelfApp(tk.Tk):
         self.mode = self.modes['remove']
         self.show_frame(ShowCollectionPage)
 
-    def remove_entry(self, frame):
+    def remove_entry_from_bottles(self):
         """Remove current bottle from the list of bottles."""
         global bottles; global current_bottle
         bottles.pop(current_bottle)
@@ -177,9 +173,6 @@ class TopShelfApp(tk.Tk):
         frame.tree.bind("<Double-1>", lambda e: frame.on_double_click(e, self))
         frame.instructions_lbl = tk.Label(frame, textvariable = frame.instructions)
 
-
-
-
     def render_update_buttons(self, frame):
         frame.update_btn = ttk.Button(frame, text="Update", command=lambda: self.update_entry(frame))
         frame.update_btn.grid(row=6, column=1,columnspan=3, padx=(20, 0), pady=(20,0), ipady=5, sticky=tk.NSEW)
@@ -188,7 +181,7 @@ class TopShelfApp(tk.Tk):
         frame.cancel_btn.grid(row=6, column=4,columnspan=3, pady=(20,0), ipady=5, sticky=tk.NSEW)
 
     def render_remove_buttons(self, frame):
-        frame.remove_btn = ttk.Button(frame, text="Remove", command=lambda: self.remove_entry(frame))
+        frame.remove_btn = ttk.Button(frame, text="Remove", command=lambda: self.remove_entry_from_bottles())
         frame.remove_btn.grid(row=6, column=1,columnspan=3, padx=(20, 0), pady=(20,0), ipady=5, sticky=tk.NSEW)
 
         frame.cancel_btn = ttk.Button(frame, text="Cancel", command=lambda: self.cancel_entry(frame))
@@ -281,6 +274,7 @@ class HomePage(tk.Frame):
 
     def update_display(self, controller):
         controller.render_homepage_display(self)
+        tk.Tk.wm_title(controller, "Top Shelf")
 
 
 class AddBottlePage(tk.Frame):
@@ -292,6 +286,7 @@ class AddBottlePage(tk.Frame):
     def update_display(self, controller):
         controller.render_bottle_details_layout(self)
         controller.render_save_buttons(self)
+        tk.Tk.wm_title(controller, "Add a Bottle")
 
 class EditBottlePage(tk.Frame):
     def __init__(self, parent, controller):
@@ -304,6 +299,7 @@ class EditBottlePage(tk.Frame):
         controller.render_bottle_details_layout(self)
         controller.render_update_buttons(self)
         controller.add_details_to_entry_boxes(self, bottles[current_bottle])
+        tk.Tk.wm_title(controller, "Edit a Bottle")
 
 class RemoveBottleDetailPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -316,6 +312,7 @@ class RemoveBottleDetailPage(tk.Frame):
         controller.render_bottle_details_layout(self)
         controller.render_remove_buttons(self)
         controller.add_details_to_entry_boxes(self, bottles[current_bottle])
+        tk.Tk.wm_title(controller, "Remove a Bottle")
 
 class ShowCollectionPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -328,6 +325,7 @@ class ShowCollectionPage(tk.Frame):
     def update_display(self, controller):
         controller.render_table(self)
         controller.add_bottles_to_table(self.tree)
+        tk.Tk.wm_title(controller, "My Collection")
 
     def on_double_click(self, event, controller):
         global bottles; global current_bottle
