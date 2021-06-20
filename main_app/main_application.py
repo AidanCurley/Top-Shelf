@@ -170,7 +170,7 @@ class TopShelfApp(tk.Tk):
         frame.tree.grid(row=0, column=0, sticky='nsew')
         frame.tree.bind("<Double-1>", lambda e: frame.on_double_click(e, self))
         frame.instructions_lbl = tk.Label(frame, textvariable = frame.instructions)
-        frame.instructions_lbl.grid(row=10,column=0)
+        frame.instructions_lbl.grid(row=10,column=0, sticky=tk.W)
 
     def render_update_buttons(self, frame):
         frame.update_btn = ttk.Button(frame, text="Update", command=lambda: self.update_entry(frame))
