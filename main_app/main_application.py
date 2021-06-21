@@ -226,10 +226,10 @@ class TopShelfApp(tk.Tk):
         return
 
 
-
 class Error(Exception):
     """Base class for exceptions in this app"""
     pass
+
 
 class InputError(Error):
     """ Exception raised when there is an error in the input
@@ -240,6 +240,7 @@ class InputError(Error):
 
     def __init__(self, expression, message):
         messagebox.showerror(title=expression, message=message)
+
 
 class Bottle(object):
     """ Object to hold bottle details
@@ -269,6 +270,7 @@ class Bottle(object):
         except:
             raise InputError("age", "Invalid entry: The age must be a whole number.")
 
+
 class HomePage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self,parent)
@@ -291,6 +293,7 @@ class AddBottlePage(tk.Frame):
         controller.render_save_buttons(self)
         tk.Tk.wm_title(controller, "Add a Bottle")
 
+
 class EditBottlePage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self,parent)
@@ -304,6 +307,7 @@ class EditBottlePage(tk.Frame):
         controller.add_details_to_entry_boxes(self, bottles[current_bottle])
         tk.Tk.wm_title(controller, "Edit a Bottle")
 
+
 class RemoveBottleDetailPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self,parent)
@@ -316,6 +320,7 @@ class RemoveBottleDetailPage(tk.Frame):
         controller.render_remove_buttons(self)
         controller.add_details_to_entry_boxes(self, bottles[current_bottle])
         tk.Tk.wm_title(controller, "Remove a Bottle")
+
 
 class ShowCollectionPage(tk.Frame):
     def __init__(self, parent, controller):
