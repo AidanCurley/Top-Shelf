@@ -14,7 +14,7 @@ class BottleTests(unittest.TestCase):
         bottle = Bottle("Ardbeg", 10, "N/A", 55.95)
         self.assertEqual(bottle.name, "10")
 
-    def test_distillery_with_Ardbeg_expect_Ardbeg(self):
+    def test_distillery_Ardbeg_expect_Ardbeg(self):
         bottle = Bottle("Ardbeg", "Uigeadail", "N/A", 55.95)
         self.assertEqual(bottle.distillery, "Ardbeg")
 
