@@ -115,7 +115,7 @@ class TopShelfApp(tk.Tk):
         # set up a dictionary to store the various frames
         # and add our pages to the frames dictionary
         self.frames = {}
-        for F in (HomePage, AddBottlePage, EditBottlePage, RemoveBottleDetailPage, ShowCollectionPage):
+        for F in (HomePage, AddBottlePage, EditBottlePage, FindBottlePage, RemoveBottleDetailPage, ShowCollectionPage):
             frame = F(container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky=tk.NSEW)
@@ -124,14 +124,14 @@ class TopShelfApp(tk.Tk):
         self.show_frame(HomePage)
         return
 
-    def add_bottles_to_table(self, table):
+    def add_bottles_to_table(self, bottles, table):
         """ Adds bottles to a table
 
             Args:
             table ([type]): [description]
         """
         # adding data to the treeview
-        for bottle in self.bottles:
+        for bottle in bottles:
             table.insert('', tk.END, values=(bottle.distillery, bottle.name, bottle.age if bottle.age != self.NA else 'N/A', bottle.price))
         return
 
@@ -158,7 +158,6 @@ class TopShelfApp(tk.Tk):
         #  display message asking for user confirmation
         response = messagebox.askquestion("Confirm", "Are you sure you want to leave without saving?")
         if response == messagebox.YES:
-            self.clear_entry_boxes(frame)
             self.show_frame(HomePage)
         return
 
@@ -181,6 +180,19 @@ class TopShelfApp(tk.Tk):
         self.current_mode= self.modes['edit']
         self.show_frame(ShowCollectionPage)
         return
+
+    def search_bottles_for_entry(self, search_term):
+        """ Searches the list of bottles for a bottle whose distillery/name
+            matches the search term
+
+            Args:
+            search_term (string): the string being searched for
+
+            Returns:
+            a list of bottles
+        """
+        return [x for x in self.bottles if x.distillery.startswith(search_term.title()) or x.name.startswith(search_term.title())]
+
 
     def get_details_from_entry_boxes(self, frame):
         """ Extracts details from entry widgets
@@ -249,7 +261,7 @@ class TopShelfApp(tk.Tk):
         return
 
     def render_bottle_details_layout(self, frame):
-        """ Renders the labels, entry boxes and buttons on the frame
+        """ Renders the labels and entry boxes on the frame
 
             Args:
             frame (Frame): the frame which will be used
@@ -275,6 +287,27 @@ class TopShelfApp(tk.Tk):
         frame.price_txt.grid(row=4, column=3, columnspan=3, pady=(10, 0), sticky=tk.W)
         return
 
+    def render_search_details_layout(self, frame):
+        """ Renders the labels and entry boxes on the frame
+
+            Args:
+            frame (Frame): the frame which will be used
+        """
+        frame.distillery_txt = tk.Entry(frame)
+        frame.distillery_txt.grid(row=3, column=0, columnspan=2, pady=(20, 0), sticky=tk.NSEW)
+        frame.distillery_txt.bind('<KeyRelease>', (lambda _: frame.callback(frame.distillery_txt.get(), self)))
+        return
+
+    def render_search_buttons(self, frame):
+        """ Renders search and cancel buttons
+
+            Args:
+            frame (Frame): the frame which will be used
+        """
+        frame.cancel_btn = ttk.Button(frame, text="Cancel", command=lambda: self.cancel_entry(frame))
+        frame.cancel_btn.grid(row=3, column=1,columnspan=1, pady=(20,0), ipady=5, sticky=tk.NSEW)
+        return
+
     def render_homepage_display(self, frame):
         """ Renders the labels, entry boxes and buttons on the homepage frame
 
@@ -288,7 +321,7 @@ class TopShelfApp(tk.Tk):
         # add and render buttons
         frame.show_col_btn = ttk.Button(frame, text="Show Collection", style='W.TButton', command = lambda: self.show_collection())
         frame.show_col_btn.grid(row=4, column=1,columnspan=3, padx=(20, 0), pady=(20,0), ipady=5, sticky=tk.NSEW)
-        frame.find_btn = ttk.Button(frame, text="Find a Bottle", style='W.TButton')
+        frame.find_btn = ttk.Button(frame, text="Find a Bottle", style='W.TButton', command = lambda: self.show_frame(FindBottlePage))
         frame.find_btn.grid(row=4, column=4,columnspan=3, pady=(20,0), ipady=5, sticky=tk.NSEW)
         frame.add_btn = ttk.Button(frame, text="Add a Bottle", style='W.TButton', command = lambda: self.show_frame(AddBottlePage))
         frame.add_btn.grid(row=5, column=1,columnspan=2, padx=(20, 0), pady=(20,0), ipady=5)
@@ -320,11 +353,11 @@ class TopShelfApp(tk.Tk):
         # Four columns, one for each atttribute
         columns = ('#1', '#2', '#3', '#4')
         frame.tree = ttk.Treeview(frame, columns=columns, show='headings')
-        frame.tree.heading('#1', text='Distillery', command = lambda: self.sort_bottles_by("distillery"))
-        frame.tree.heading('#2', text='Name', command = lambda: self.sort_bottles_by("name"))
-        frame.tree.heading('#3', text='Age', command = lambda: self.sort_bottles_by("age"))
-        frame.tree.heading('#4', text='Price', command = lambda: self.sort_bottles_by("price"))
-        frame.tree.grid(row=0, column=0, sticky='nsew')
+        frame.tree.heading('#1', text='Distillery', command = lambda: self.sort_bottles_by("distillery", frame))
+        frame.tree.heading('#2', text='Name', command = lambda: self.sort_bottles_by("name", frame))
+        frame.tree.heading('#3', text='Age', command = lambda: self.sort_bottles_by("age", frame))
+        frame.tree.heading('#4', text='Price', command = lambda: self.sort_bottles_by("price", frame))
+        frame.tree.grid(row=0, column=0, columnspan=10, sticky='nsew')
 
         # make columns run function frame.on_double_click when double-clicked
         frame.tree.bind("<Double-1>", lambda e: frame.on_double_click(e, self))
@@ -332,7 +365,7 @@ class TopShelfApp(tk.Tk):
         # display the appropriate message depending on whether in edit,
         # remove, or show modes
         frame.instructions_lbl = tk.Label(frame, textvariable = frame.instructions)
-        frame.instructions_lbl.grid(row=10,column=0, sticky=tk.W)
+        frame.instructions_lbl.grid(row=2,column=0, sticky=tk.W)
         return
 
     def render_update_buttons(self, frame):
@@ -398,7 +431,7 @@ class TopShelfApp(tk.Tk):
         current_frame.tkraise()
         return
 
-    def sort_bottles_by(self, attribute):
+    def sort_bottles_by(self, attribute, frame):
         """ Sorts the list of bottles by the specified attribute
 
             Args:
@@ -406,7 +439,7 @@ class TopShelfApp(tk.Tk):
         """
         self.bottles = sorted(self.bottles, key=lambda bottle: getattr(bottle, attribute))
         # render the showCollection page again so the display is updated
-        self.show_frame(ShowCollectionPage)
+        frame.update_display(self)
         return
 
     def update_entry(self, frame):
@@ -507,6 +540,45 @@ class EditBottlePage(tk.Frame):
         return
 
 
+class FindBottlePage(tk.Frame):
+    """ Class for the findbottlepage window
+
+        Methods
+        ___________________________
+        update_display: renders findbottlepage updates title and size of window
+    """
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self,parent)
+        self.instructions = tk.StringVar()
+        self.update_display(controller)
+        return
+
+    def callback(self, distillery, controller):
+        results = controller.search_bottles_for_entry(distillery)
+        self.tree.delete(*self.tree.get_children())
+        controller.add_bottles_to_table(results, self.tree)
+
+
+    def update_display(self, controller):
+        """ Renders findbottlepage, updates title and size of window
+
+            Args:
+            controller (Frame): the main application so methods can be accessed
+        """
+        self.instructions.set("Start typing a distillery or name to filter your collection")
+        controller.render_search_details_layout(self)
+        controller.render_search_buttons(self)
+
+        # render table, make sure it's empty and fill it with list of bottles
+        controller.render_table(self)
+        self.tree.delete(*self.tree.get_children())
+        controller.add_bottles_to_table(controller.bottles, self.tree)
+
+        # change title and size of window
+        tk.Tk.wm_title(controller, "Find a Bottle")
+        controller.geometry('770x350')
+        return
+
 class RemoveBottleDetailPage(tk.Frame):
     """ Class for the removebottlepage window
 
@@ -562,8 +634,13 @@ class ShowCollectionPage(tk.Frame):
         # display the instructions for the current mode e.g. 'double click
         # to remove a bottle' when mode is 'remove'
         self.instructions.set(controller.current_mode)
+
+        # render the table, make sure it's empty and fille it with bottles
         controller.render_table(self)
-        controller.add_bottles_to_table(self.tree)
+        self.tree.delete(*self.tree.get_children())
+        controller.add_bottles_to_table(controller.bottles, self.tree)
+
+        # change title of page and set size
         tk.Tk.wm_title(controller, "My Collection")
         controller.geometry('770x250')
         return
