@@ -20,6 +20,8 @@ class Bottle(object):
         for character in distillery:
             if character.isdigit():
                 raise InputError("distillery", "Invalid entry: The distillery name can only include alphabetic characters.")
+        if len(distillery) == 0:
+            raise InputError("distillery", "Invalid entry: The distillery name cannot be blank.")
         self.distillery = distillery.title()
 
         # ensure the first letter of the bottle name is uppercase
@@ -28,14 +30,14 @@ class Bottle(object):
         # ensure that the price is in the format ##.##
         try:
             self.price = "{:.2f}".format(float(price))
-            self.price = float(price)
+            self.price = round(float(price), 2)
         except ValueError:
             raise InputError("price", "Invalid entry: The price must be a number in the following format: ##.##")
 
         # ensure the age is a whole number or if it is 'N/A', convert to 0
         # for storage and sorting purposes
         try:
-            if age == "N/A":
+            if age == "N/A" or age == "":
                 self.age = 0
             else:
                 self.age = int(age)
@@ -577,6 +579,28 @@ class FindBottlePage(tk.Frame):
         # change title and size of window
         tk.Tk.wm_title(controller, "Find a Bottle")
         controller.geometry('770x350')
+        return
+
+    def on_double_click(self, event, controller):
+        """ Handles double-click on an item in the table
+
+            Args:
+            controller (Frame): the main application so methods can be accessed
+            """
+        # identify which bottle was clicked
+        item = self.tree.identify('item',event.x, event.y)
+        vals = self.tree.item(self.tree.focus())
+
+        # set the current_bottle = the bottle that was clicked
+        for index, bottle in enumerate(controller.bottles):
+            if bottle.distillery == vals['values'][0] and bottle.name == vals['values'][1]:
+                controller.current_bottle = index
+
+        # decide which page to be displayed depending on the mode
+        if controller.current_mode== controller.modes['remove']:
+            controller.show_frame(RemoveBottleDetailPage)
+        else:
+            controller.show_frame(EditBottlePage)
         return
 
 class RemoveBottleDetailPage(tk.Frame):
