@@ -295,9 +295,13 @@ class TopShelfApp(tk.Tk):
             Args:
             frame (Frame): the frame which will be used
         """
-        frame.distillery_txt = tk.Entry(frame)
-        frame.distillery_txt.grid(row=3, column=0, columnspan=2, pady=(20, 0), sticky=tk.NSEW)
-        frame.distillery_txt.bind('<KeyRelease>', (lambda _: frame.callback(frame.distillery_txt.get(), self)))
+        frame.search_txt = tk.Entry(frame)
+        frame.search_txt.grid(row=3, column=0, columnspan=2, pady=(20, 0), sticky=tk.NSEW)
+
+        # Every time a key is pressed in the search box, run the callback
+        # function which searches for bottles whose distillery/name begin
+        # with the term in the search box and filters the table accordingly
+        frame.search_txt.bind('<KeyRelease>', (lambda _: frame.callback(frame.search_txt.get(), self)))
         return
 
     def render_search_buttons(self, frame):
@@ -555,9 +559,19 @@ class FindBottlePage(tk.Frame):
         self.update_display(controller)
         return
 
-    def callback(self, distillery, controller):
-        results = controller.search_bottles_for_entry(distillery)
+    def callback(self, search_term, controller):
+        """ Searches the bottles list for distilleries/names beginning with
+            the search_term and updates the table with the results
+
+            Args:
+            search_term (string): the term used to filter the list of bottles
+            controller (Frame): the main application so methods can be accessed
+        """
+        # search the bottles list for distillery/name beginning with search_term
+        results = controller.search_bottles_for_entry(search_term)
+        # delete all results from the table
         self.tree.delete(*self.tree.get_children())
+        # update table with search results
         controller.add_bottles_to_table(results, self.tree)
 
 
