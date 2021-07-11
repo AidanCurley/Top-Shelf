@@ -88,7 +88,7 @@ class TopShelfApp(tk.Tk):
         frames: dictionary
         contains the frames which are used as different pages
             --   HomePage, AddBottlePage, EditBottlePage,
-            --   RemoveBottleDetailPage, ShowCollectionPage
+            --   RemoveBottlePage, ShowCollectionPage
     """
 
     def __init__(self, *args, **kwargs):
@@ -117,7 +117,7 @@ class TopShelfApp(tk.Tk):
         # set up a dictionary to store the various frames
         # and add our pages to the frames dictionary
         self.frames = {}
-        for F in (HomePage, AddBottlePage, EditBottlePage, FindBottlePage, RemoveBottleDetailPage, ShowCollectionPage):
+        for F in (HomePage, AddBottlePage, EditBottlePage, FindBottlePage, RemoveBottlePage, ShowCollectionPage):
             frame = F(container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky=tk.NSEW)
@@ -612,12 +612,13 @@ class FindBottlePage(tk.Frame):
 
         # decide which page to be displayed depending on the mode
         if controller.current_mode== controller.modes['remove']:
-            controller.show_frame(RemoveBottleDetailPage)
+            controller.show_frame(RemoveBottlePage)
         else:
             controller.show_frame(EditBottlePage)
         return
 
-class RemoveBottleDetailPage(tk.Frame):
+
+class RemoveBottlePage(tk.Frame):
     """ Class for the removebottlepage window
 
         Methods
@@ -700,7 +701,7 @@ class ShowCollectionPage(tk.Frame):
 
         # decide which page to be displayed depending on the mode
         if controller.current_mode== controller.modes['remove']:
-            controller.show_frame(RemoveBottleDetailPage)
+            controller.show_frame(RemoveBottlePage)
         else:
             controller.show_frame(EditBottlePage)
         return

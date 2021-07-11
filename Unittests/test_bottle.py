@@ -39,6 +39,7 @@ class BottleTests(unittest.TestCase):
             bottle = Bottle("Ardbeg10", "Uigeadail", "N/A", "55.95")
             the_exception = cm.exception
             self.assertEqual(the_exception.title, "Distillery")
+
     def test_price_with_55point95_expect_55point95(self):
         bottle = Bottle("Ardbeg", "Uigeadail", "N/A", 55.95)
         self.assertEqual(bottle.price, 55.95)
@@ -62,6 +63,7 @@ class BottleTests(unittest.TestCase):
             bottle = Bottle("Ardbeg", "Uigeadail", "N/A", "")
             the_exception = cm.exception
             self.assertEqual(the_exception.title, "Price")
+
     def test_age_NA_expect_0(self):
         bottle = Bottle("Ardbeg", "Uigeadail", "N/A", 55)
         self.assertEqual(bottle.age, 0)
